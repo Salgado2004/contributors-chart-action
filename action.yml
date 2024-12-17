@@ -1,6 +1,10 @@
 name: 'Repository Contributors Chart Generator'
 description: 'Generate a HTML chart of the contributors and place it in the README'
 author: 'Salgado2004'
+inputs:
+  token:
+    description: 'Repository secret token'
+    required: true
 runs:
   using: 'node20'
   main: 'dist/index.js'
