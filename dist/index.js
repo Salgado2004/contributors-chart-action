@@ -31828,6 +31828,15 @@ async function run() {
 
         const content = Buffer.from(readme.data.content, 'base64').toString();
 
+        const contributors = await octokit.rest.repos.listContributors({
+            owner: github.context.repo.owner,
+            repo: github.context.repo.repo
+        });
+
+        const contributorsList = contributors.data.map(contributor => (contributor.login, contributor.avatar_url));
+
+        console.log(contributorsList);
+
         const newContent = content + '\n\n' + "## New Content";
 
         const contentEncoded = Buffer.from(newContent).toString('base64');
