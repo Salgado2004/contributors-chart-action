@@ -27,7 +27,7 @@ async function createChart(contributorsList){
         contributorsChart += 
 `       <td align="center">
             <a href="${contributor[2]}">
-                <img src="${path}" alt="${contributor[0]}" />
+                <img src="${contributor[1]}" alt="${contributor[0]}" />
                 <p><strong>${contributor[0]}</strong></p>
             </a>
         </td>
