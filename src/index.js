@@ -6,16 +6,13 @@ async function run() {
         const token = core.getInput('token');
         const octokit = github.getOctokit(token);
 
-        const readme = await octokit.repos.getReadme({
+        const readme = await octokit.rest.repos.getReadme({
             owner: github.context.repo.owner,
             repo: github.context.repo.repo
         });
 
-        console.log(readme.data);
-
-        const readmeContent = Buffer.from(readme.data.content, 'base64').toString();
-        
-        console.log(readmeContent);
+        const content = Buffer.from(readme.data.content, 'base64').toString();
+        console.log(content);
     } catch (error) {
         core.setFailed(error.message);
     }
