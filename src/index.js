@@ -36,20 +36,22 @@ async function processImage(path){
     ctx.clip();
 
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-    const base64Image = canvas.toDataURL();
+    const base64Image = canvas.toDataURL("image/png");
 
     return base64Image;
 }
 
 async function createChart(contributorsList){
+    core.info("Building contributors chart...");
     let contributorsChart = "<table>\n\t<tr>\n";
 
-    for(let contributor of contributorsList) {
-        const path = await processImage(contributor[1]);
+    for(let [index, contributor] of contributorsList.entries) {
+        core.info(`Processing contributor ${index+1}/${contributorsList.length}`);
+        //const path = await processImage(contributor[1]);
         contributorsChart += 
 `       <td align="center">
             <a href="${contributor[2]}">
-                <img src="${path}" alt="${contributor[0]}"/>
+                <img src="${contributor[1]}" width="100px" alt="${contributor[0]}"/>
                 <p><strong>${contributor[0]}</strong></p>
             </a>
         </td>
