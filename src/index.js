@@ -11,6 +11,8 @@ async function run() {
             repo: github.context.repo.repo
         });
 
+        console.log(readme.data);
+
         const readmeContent = Buffer.from(readme.data.content, 'base64').toString();
         console.log(readmeContent);
     } catch (error) {
