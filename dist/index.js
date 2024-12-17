@@ -31834,13 +31834,13 @@ function findIndexes(data){
 }
 
 async function createChart(contributorsList){
-    let contributorsChart = "<table>\n\t<tr>\n";
+    let contributorsChart = "<table align='center'>\n\t<tr>\n";
 
     for(let contributor of contributorsList) {
         contributorsChart += 
 `       <td align="center">
             <a href="${contributor[2]}">
-                <img src="${contributor[1]}" alt="${contributor[0]}" />
+                <img src="${contributor[1]}" width="100px;" alt="${contributor[0]}" />
                 <p><strong>${contributor[0]}</strong></p>
             </a>
         </td>
