@@ -45,7 +45,7 @@ async function createChart(contributorsList){
     core.info("Building contributors chart...");
     let contributorsChart = "<table>\n\t<tr>\n";
 
-    for(let [index, contributor] of contributorsList.entries) {
+    for(let [index, contributor] of contributorsList.entries()) {
         core.info(`Processing contributor ${index+1}/${contributorsList.length}`);
         //const path = await processImage(contributor[1]);
         contributorsChart += 
