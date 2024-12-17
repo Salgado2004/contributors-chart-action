@@ -1,46 +1,13 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
-
-function findIndexes(data){
-    const startComment = '<!-- contributors -->';
-    const endComment = '<!-- /contributors -->';
-    const startIndex = data.indexOf(startComment) + startComment.length;
-    const endIndex = data.indexOf(endComment);
-
-    if(startIndex === -1 || endIndex === -1){
-        console.error('Marcadores não encontrados');
-        return;
-    }
-
-    if(startIndex >= endIndex){
-        console.error('Marcadores mal posicionados');
-        return;
-    }
-
-    return [startIndex, endIndex];
-}
-
-function createChart(contributorsList){
-    let contributorsChart = "<table><tr>"; // Changed from const to let
-
-    contributorsList.forEach(contributor => {
-        contributorsChart += `
-        <td align="center">
-            <img src="${contributor[1]}" width="100px;" alt="${contributor[0]}"/>
-            <a href="${contributor[2]}"><strong>${contributor[0]}</strong></a>
-        </td>
-        `
-    });
-
-    contributorsChart += "</tr></table>";
-
-    return contributorsChart;
-}
+const utils = require("./util");
 
 async function run() {
     try {
         const token = core.getInput('token');
         const octokit = github.getOctokit(token);
+
+        core.info("Request README data");
 
         const readme = await octokit.rest.repos.getReadme({
             owner: github.context.repo.owner,
@@ -54,22 +21,28 @@ async function run() {
             repo: github.context.repo.repo
         });
 
-        const contributorsList = contributors.data.map(contributor => [contributor.login, contributor.avatar_url, contributor.url]);
+        core.info("Gather contributors list");
 
-        const contributorsChart = createChart(contributorsList);
+        const contributorsList = contributors.data.map(contributor => [contributor.login, contributor.avatar_url, contributor.html_url]);
 
-        const indexes = findIndexes(content);
+        const contributorsChart = utils.createChart(contributorsList);
 
-        const newContent = content.slice(0, indexes[0]) + contributorsChart + content.slice(indexes[1]);
+        const indexes = utils.findIndexes(content);
+
+        core.info("Update README content");
+
+        const newContent = content.slice(0, indexes[0]) + "\n" + contributorsChart + "\n" + content.slice(indexes[1]);
 
         const contentEncoded = Buffer.from(newContent).toString('base64');
+
+        core.info("Commit updates");
 
         const { data } = await octokit.rest.repos.createOrUpdateFileContents({
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
             path: "README.md",
             sha: readme.data.sha,
-            message: "docs: Add new content",
+            message: "docs: create or update contributors chart",
             content: contentEncoded
         });
 
