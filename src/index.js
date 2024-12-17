@@ -23,6 +23,7 @@ async function run() {
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
             path: "README.md",
+            sha: readme.data.sha,
             message: "docs: Add new content",
             content: contentEncoded
         });
