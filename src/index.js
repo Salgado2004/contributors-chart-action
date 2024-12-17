@@ -80,7 +80,15 @@ async function run() {
             path: "README.md",
             sha: readme.data.sha,
             message: "docs: create or update contributors chart",
-            content: contentEncoded
+            content: contentEncoded,
+            branch: "actionsbot/update-contributors"
+        });
+
+        const { data2 } = await octokit.rest.pulls.create({
+            owner: github.context.repo.owner,
+            repo: github.context.repo.repo,
+            head: "development",
+            base: "actionsbot/update-contributors"
         });
 
     } catch (error) {
