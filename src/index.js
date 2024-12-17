@@ -14,6 +14,7 @@ async function run() {
         console.log(readme.data);
 
         const readmeContent = Buffer.from(readme.data.content, 'base64').toString();
+        
         console.log(readmeContent);
     } catch (error) {
         core.setFailed(error.message);

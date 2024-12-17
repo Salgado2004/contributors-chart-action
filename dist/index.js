@@ -31816,9 +31816,19 @@ const github = __nccwpck_require__(2083);
 
 async function run() {
     try {
-        // Get the README DATA from the README.md file in the repository who triggered the action
-        const readme = github.context.payload.repository.readme;
-        console.log(readme);
+        const token = core.getInput('token');
+        const octokit = github.getOctokit(token);
+
+        const readme = await octokit.repos.getReadme({
+            owner: github.context.repo.owner,
+            repo: github.context.repo.repo
+        });
+
+        console.log(readme.data);
+
+        const readmeContent = Buffer.from(readme.data.content, 'base64').toString();
+        
+        console.log(readmeContent);
     } catch (error) {
         core.setFailed(error.message);
     }
