@@ -1,6 +1,5 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
-const sharp = require("sharp");
 
 function findIndexes(data){
     const startComment = '<!-- contributors -->';
@@ -21,33 +20,14 @@ function findIndexes(data){
     return [startIndex, endIndex];
 }
 
-async function processImage(path){
-    const roundedCorners = Buffer.from(
-        `<svg><rect x="0" y="0" width="100" height="100" rx="40" ry="40" /></svg>`
-    );
-
-    const buffer = await sharp(path)
-    .resize(100,100)
-    .composite([{ input: roundedCorners, blend: 'dest-in' }])
-    .sharpen()
-    .withMetadata()
-    .toBuffer();
-
-    const base64Image = buffer.toString('base64');
-    const dataUrl = `data:image/png;base64,${base64Image}`;
-
-    return dataUrl;
-}
-
-async function createChart(contributorsList){
+function createChart(contributorsList){
     let contributorsChart = "<table>\n\t<tr>\n";
 
     for(let contributor of contributorsList) {
-        const path = await processImage(contributor[1]);
         contributorsChart += 
 `       <td align="center">
             <a href="${contributor[2]}">
-                <img src="${path}" alt="${contributor[0]}"/>
+                <img src="${contributor[1]}" alt="${contributor[0]}"/>
                 <p><strong>${contributor[0]}</strong></p>
             </a>
         </td>
