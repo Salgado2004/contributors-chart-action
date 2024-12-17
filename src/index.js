@@ -3,9 +3,8 @@ const github = require('@actions/github');
 
 async function run() {
     try {
-        // Get the README DATA from the README.md file in the repository who triggered the action
-        const readme = github.context.payload.repository.readme;
-        console.log(readme);
+        const repository = github.context.payload.repository;
+        console.log(repository);
     } catch (error) {
         core.setFailed(error.message);
     }
