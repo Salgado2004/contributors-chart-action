@@ -1,5 +1,6 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
+const { createCanvas, loadImage } = require('canvas');
 
 function findIndexes(data){
     const startComment = '<!-- contributors -->';
@@ -20,14 +21,35 @@ function findIndexes(data){
     return [startIndex, endIndex];
 }
 
-function createChart(contributorsList){
+async function processImage(path){
+    const canvas = createCanvas(100,100);
+    const ctx = canvas.getContext('2d');
+    const image = await loadImage(path);
+
+    const radius = 50;
+    const centerx = canvas.width / 2;
+    const centery = canvas.height / 2;
+
+    ctx.beginPath();
+    ctx.arc(centerx, centery, radius, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.clip();
+
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const base64Image = canvas.toDataURL();
+
+    return base64Image;
+}
+
+async function createChart(contributorsList){
     let contributorsChart = "<table>\n\t<tr>\n";
 
     for(let contributor of contributorsList) {
+        const path = await processImage(contributor[1]);
         contributorsChart += 
 `       <td align="center">
             <a href="${contributor[2]}">
-                <img src="${contributor[1]}" alt="${contributor[0]}"/>
+                <img src="${path}" alt="${contributor[0]}"/>
                 <p><strong>${contributor[0]}</strong></p>
             </a>
         </td>
@@ -62,7 +84,7 @@ async function run() {
 
         const contributorsList = contributors.data.map(contributor => [contributor.login, contributor.avatar_url, contributor.html_url]);
 
-        const contributorsChart = createChart(contributorsList);
+        const contributorsChart = await createChart(contributorsList);
 
         const indexes = findIndexes(content);
 
