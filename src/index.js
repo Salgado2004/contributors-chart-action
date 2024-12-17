@@ -19,7 +19,7 @@ async function run() {
 
         const contentEncoded = Buffer.from(newContent).toString('base64');
 
-        const { data } = await octokit.repos.createOrUpdateFileContents({
+        const { data } = await octokit.rest.repos.createOrUpdateFileContents({
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
             path: "README.md",
