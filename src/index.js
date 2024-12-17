@@ -21,7 +21,7 @@ function findIndexes(data){
 }
 
 function createChart(contributorsList){
-    const contributorsChart = "<table><tr>";
+    let contributorsChart = "<table><tr>"; // Changed from const to let
 
     contributorsList.forEach(contributor => {
         contributorsChart += `
