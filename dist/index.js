@@ -31515,9 +31515,9 @@ async function setUpEnvironment(octokit) {
     const repo = github.context.repo.repo;
     core.debug(`owner: ${owner}, repo: ${repo}`);
     try {
-        const data = await octokit.rest.repos.get({ owner, repo });
-        core.debug(`API response data: ${JSON.stringify(data)}`);
-        const defaultBranch = data.default_branch;
+        const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
+        core.debug(`API response data: ${JSON.stringify(repoData)}`);
+        const defaultBranch = repoData.default_branch;
         const ref = "actionsbot/update-contributors";
 
         core.debug(`default branch: ${defaultBranch}`);
@@ -31528,10 +31528,10 @@ async function setUpEnvironment(octokit) {
         } catch (error) {
             if (error.status === 404) {
                 core.debug(`Branch ${ref} not found, creating new branch`);
-                const data = await octokit.rest.repos.getBranch({ owner, repo, branch: defaultBranch });
-                core.debug(`Return data: ${JSON.stringify(data)}`);
-                if (data && data.commit && data.commit.sha) {
-                    await octokit.rest.git.createRef({ owner, repo, ref: `refs/heads/${ref}`, sha: data.commit.sha });
+                const { data: branchData} = await octokit.rest.repos.getBranch({ owner, repo, branch: defaultBranch });
+                core.debug(`Return data: ${JSON.stringify(branchData)}`);
+                if (branchData && branchData.commit && branchData.commit.sha) {
+                    await octokit.rest.git.createRef({ owner, repo, ref: `refs/heads/${ref}`, sha: branchData.commit.sha });
                 } else {
                     core.setFailed(`Failed to get commit SHA for branch ${defaultBranch}`);
                 }
