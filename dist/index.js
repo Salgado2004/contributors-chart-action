@@ -31513,20 +31513,30 @@ const { createCanvas, loadImage } = __nccwpck_require__(9487);
 async function setUpEnvironment(octokit) {
     const owner = github.context.repo.owner;
     const repo = github.context.repo.repo;
+    core.debug(`owner: ${owner}, repo: ${repo}`);
     try {
         const data = await octokit.rest.repos.get({ owner, repo });
         const defaultBranch = data.default_branch;
         const ref = "actionsbot/update-contributors";
+
+        core.debug(`default branch: ${defaultBranch}`);
 
         try {
             await octokit.rest.repos.getBranch({ owner, repo, branch: ref });
             await octokit.rest.repos.merge({ owner, repo, ref, defaultBranch });
         } catch (error) {
             if (error.status === 404) {
+                core.debug(`Branch ${ref} not found, creating new branch`);
                 const data = await octokit.rest.repos.getBranch({ owner, repo, branch: defaultBranch });
-                await octokit.rest.git.createRef({ owner, repo, ref: `refs/heads/${ref}`, sha: data.commit.sha });
+                core.debug(`Return data: ${JSON.stringify(data)}`);
+                if (data && data.commit && data.commit.sha) {
+                    await octokit.rest.git.createRef({ owner, repo, ref: `refs/heads/${ref}`, sha: data.commit.sha });
+                } else {
+                    core.setFailed(`Failed to get commit SHA for branch ${defaultBranch}`);
+                }
+            } else {
+                core.setFailed(`Setting up environment failed: ${error.message}`, error);
             }
-            core.setFailed(`Setting up environment failed: ${error.message}`, error);
         }
         return { owner: owner, repo: repo, defaultBranch: defaultBranch, ref: ref };
     } catch (error) {
@@ -31539,6 +31549,8 @@ function findIndexes(data) {
     const endComment = '<!-- /contributors -->';
     const startIndex = data.indexOf(startComment) + startComment.length;
     const endIndex = data.indexOf(endComment);
+
+    core.debug(`startIndex: ${startIndex}, endIndex: ${endIndex}`);
 
     if (startIndex === -1 || endIndex === -1) {
         core.warning("Comment markers not found");
@@ -31555,6 +31567,7 @@ function findIndexes(data) {
 
 async function processImage(contributor) {
     const path = contributor[1];
+    core.debug(`Processing image for contributor: ${contributor[0]}, path: ${path}`);
     const canvas = createCanvas(80, 80);
     const ctx = canvas.getContext('2d');
     const image = await loadImage(path);
@@ -31571,10 +31584,13 @@ async function processImage(contributor) {
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
     const base64Image = canvas.toDataURL('image/png');
 
+    core.debug(`Image processed for contributor: ${contributor[0]}`);
+
     return { path: `contributors/${contributor[0]}.png`, contentBase64: base64Image.replace("data:image/png;base64,","")};
 }
 
 async function createChart(contributorsList) {
+    core.debug(`Creating chart for contributors list`);
     let contributorsChart = "<table>\n\t<tr>\n";
     let contributorsImages = [];
     let counter = 0;
@@ -31598,11 +31614,14 @@ async function createChart(contributorsList) {
     };
     contributorsChart += "\t</tr>\n</table>";
 
+    core.debug(`Chart created for contributors list`);
+
     return { chart: contributorsChart, images: contributorsImages };
 }
 
 async function commitContributors(env, changes){
     try{
+        core.debug(`Committing contributors avatars changes`);
         const ref = await octokit.rest.git.getRef({ owner: env.owner, repo: env.repo, ref: `heads/${env.ref}`});
         const baseTree = ref.object.sha;
         let tree = []
@@ -31618,6 +31637,7 @@ async function commitContributors(env, changes){
         const treeData = await octokit.rest.git.createTree({ owner: env.owner, repo: env.repo, base_tree: baseTree, tree: tree });
         const commitData = await octokit.rest.git.createCommit({ owner: env.owner, repo: env.repo, message: "content: upload contributors avatars", tree: treeData.sha, parents: [baseTree] });
         await octokit.rest.git.updateRef({ owner: env.owner, repo: env.repo, ref: `heads/${env.ref}`, sha: commitData.sha });
+        core.debug(`Contributors avatars changes committed`);
     } catch(error){
         core.setFailed(`Commit contributors avatars changes failed: ${error.message}`, error);
     }
@@ -31625,6 +31645,7 @@ async function commitContributors(env, changes){
 
 async function commitReadme(env, changes){
     try{
+        core.debug(`Committing README changes`);
         await octokit.rest.repos.createOrUpdateFileContents({
             owner: env.owner,
             repo: env.repo,
@@ -31634,6 +31655,7 @@ async function commitReadme(env, changes){
             content: changes.content,
             branch: env.ref
         });
+        core.debug(`README changes committed`);
     } catch(error){
         core.setFailed(`Commit readme changes failed: ${error.message}`, error);
     }
@@ -33575,32 +33597,41 @@ const core = __nccwpck_require__(3063);
 async function run() {
     try {
         core.info("Setting up environment");
+        core.debug("Fetching token");
         const token = core.getInput('token');
         const octokit = github.getOctokit(token);
+        core.debug("Setting up environment with octokit");
         const env = await utils.setUpEnvironment(octokit);
 
         core.info("Request README data");
+        core.debug(`Fetching README for owner: ${env.owner}, repo: ${env.repo}`);
         const readme = await octokit.rest.repos.getReadme({ owner: env.owner, repo: env.repo });
         const content = Buffer.from(readme.data.content, 'base64').toString();
 
         core.info("Gather contributors list");
+        core.debug(`Listing contributors for owner: ${env.owner}, repo: ${env.repo}`);
         const contributors = await octokit.rest.repos.listContributors({ owner: env.owner, repo: env.repo });
         const contributorsList = contributors.data.map(contributor => [contributor.login, contributor.avatar_url, contributor.html_url]);
         core.info("Creating chart...");
+        core.debug("Creating chart with contributors list");
         const contributorsChartData = await utils.createChart(contributorsList);
         
         core.info("Update README content");
+        core.debug("Finding indexes in README content");
         const indexes = utils.findIndexes(content);
         const newContent = content.slice(0, indexes[0]) + "\n" + contributorsChartData.chart + "\n" + content.slice(indexes[1]);
         const contentEncoded = Buffer.from(newContent).toString('base64');
 
         core.info("Push updates");
+        core.debug("Committing contributors data");
         await utils.commitContributors(env, contributorsChartData.images);
+        core.debug("Committing updated README");
         await utils.commitReadme(env, { content: contentEncoded, sha: readme.data.sha });
 
+        core.debug("Creating pull request");
         await octokit.rest.pulls.create({ owner: env.owner, repo: env.repo, head: env.defaultBranch, base: env.ref });
 
-        core.info("Contributors chart created sucessfully! Please check the opened PR");
+        core.info("Contributors chart created successfully! Please check the opened PR");
     } catch (error) {
         core.setFailed(`Action failed: ${error.message}`, error);
     }
