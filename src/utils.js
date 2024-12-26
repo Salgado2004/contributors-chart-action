@@ -18,11 +18,11 @@ async function setUpEnvironment(octokit) {
                 const data = await octokit.rest.repos.getBranch({ owner, repo, branch: defaultBranch });
                 await octokit.rest.git.createRef({ owner, repo, ref: `refs/heads/${ref}`, sha: data.commit.sha });
             }
-            core.setFailed("Setting up environment failed: ", error);
+            core.setFailed(`Setting up environment failed: ${error.message}`, error);
         }
         return { owner: owner, repo: repo, defaultBranch: defaultBranch, ref: ref };
     } catch (error) {
-        core.setFailed("Setting up environment failed: ", error);
+        core.setFailed(`Setting up environment failed: ${error.message}`, error);
     }
 }
 
@@ -111,7 +111,7 @@ async function commitContributors(env, changes){
         const commitData = await octokit.rest.git.createCommit({ owner: env.owner, repo: env.repo, message: "content: upload contributors avatars", tree: treeData.sha, parents: [baseTree] });
         await octokit.rest.git.updateRef({ owner: env.owner, repo: env.repo, ref: `heads/${env.ref}`, sha: commitData.sha });
     } catch(error){
-        core.setFailed("Commit contributors avatars changes failed: ", error);
+        core.setFailed(`Commit contributors avatars changes failed: ${error.message}`, error);
     }
 }
 
@@ -127,7 +127,7 @@ async function commitReadme(env, changes){
             branch: env.ref
         });
     } catch(error){
-        core.setFailed("Commit readme changes failed: ", error);
+        core.setFailed(`Commit readme changes failed: ${error.message}`, error);
     }
 }
 

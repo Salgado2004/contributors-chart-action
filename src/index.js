@@ -31,7 +31,7 @@ async function run() {
 
         core.info("Contributors chart created sucessfully! Please check the opened PR");
     } catch (error) {
-        core.setFailed("Action failed: ", error);
+        core.setFailed(`Action failed: ${error.message}`, error);
     }
 }
 
