@@ -8,7 +8,7 @@ async function setUpEnvironment(octokit) {
     try {
         const data = await octokit.rest.repos.get({ owner, repo });
         const defaultBranch = data.default_branch;
-        const ref = "actionsbot/contributorsChart";
+        const ref = "actionsbot/update-contributors";
 
         try {
             await octokit.rest.repos.getBranch({ owner, repo, branch: ref });
@@ -45,7 +45,8 @@ function findIndexes(data) {
     return [startIndex, endIndex];
 }
 
-async function processImage(path) {
+async function processImage(contributor) {
+    const path = contributor[1];
     const canvas = createCanvas(80, 80);
     const ctx = canvas.getContext('2d');
     const image = await loadImage(path);
@@ -62,19 +63,20 @@ async function processImage(path) {
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
     const base64Image = canvas.toDataURL('image/png');
 
-    return base64Image;
+    return { path: `contributors/${contributor[0]}.png`, contentBase64: base64Image.replace("data:image/png;base64,","")};
 }
 
 async function createChart(contributorsList) {
     let contributorsChart = "<table>\n\t<tr>\n";
+    let contributorsImages = [];
     let counter = 0;
 
     for (let contributor of contributorsList) {
-        const path = await processImage(contributor[1]);
+        const imageData = await processImage(contributor);
         contributorsChart +=
-            `       <td align="center">
+`       <td align="center">
             <a href="${contributor[2]}">
-                <img src="${path}" width="100px;" alt="${contributor[0]}" />
+                <img src="${imageData.path}" width="100px;" alt="${contributor[0]}" />
                 <p><strong>${contributor[0]}</strong></p>
             </a>
         </td>
@@ -84,15 +86,55 @@ async function createChart(contributorsList) {
             contributorsChart += "\t</tr>\n\t<tr>\n"
             counter = 0;
         }
+        contributorsImages.push(imageData);
     };
-
     contributorsChart += "\t</tr>\n</table>";
 
-    return contributorsChart;
+    return { chart: contributorsChart, images: contributorsImages };
+}
+
+async function commitContributors(env, changes){
+    try{
+        const ref = await octokit.rest.git.getRef({ owner: env.owner, repo: env.repo, ref: `heads/${env.ref}`});
+        const baseTree = ref.object.sha;
+        let tree = []
+        for(image of changes){
+            tree.push({
+                path: image.path,
+                mode: '100644',
+                type: 'blob',
+                content: image.contentBase64,
+                encoding: 'base64'
+            });
+        }
+        const treeData = await octokit.rest.git.createTree({ owner: env.owner, repo: env.repo, base_tree: baseTree, tree: tree });
+        const commitData = await octokit.rest.git.createCommit({ owner: env.owner, repo: env.repo, message: "content: upload contributors avatars", tree: treeData.sha, parents: [baseTree] });
+        await octokit.rest.git.updateRef({ owner: env.owner, repo: env.repo, ref: `heads/${env.ref}`, sha: commitData.sha });
+    } catch(error){
+        core.setFailed("Commit contributors avatars changes failed: ", error);
+    }
+}
+
+async function commitReadme(env, changes){
+    try{
+        await octokit.rest.repos.createOrUpdateFileContents({
+            owner: env.owner,
+            repo: env.repo,
+            path: "README.md",
+            sha: changes.sha,
+            message: "docs: create or update contributors chart",
+            content: changes.content,
+            branch: env.ref
+        });
+    } catch(error){
+        core.setFailed("Commit readme changes failed: ", error);
+    }
 }
 
 module.exports = {
     findIndexes,
     createChart,
-    setUpEnvironment
+    setUpEnvironment,
+    commitContributors,
+    commitReadme
 }

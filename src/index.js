@@ -15,33 +15,21 @@ async function run() {
         core.info("Gather contributors list");
         const contributors = await octokit.rest.repos.listContributors({ owner: env.owner, repo: env.repo });
         const contributorsList = contributors.data.map(contributor => [contributor.login, contributor.avatar_url, contributor.html_url]);
-        const contributorsChart = await utils.createChart(contributorsList);
-
+        core.info("Creating chart...");
+        const contributorsChartData = await utils.createChart(contributorsList);
         
         core.info("Update README content");
         const indexes = utils.findIndexes(content);
-        const newContent = content.slice(0, indexes[0]) + "\n" + contributorsChart + "\n" + content.slice(indexes[1]);
+        const newContent = content.slice(0, indexes[0]) + "\n" + contributorsChartData.chart + "\n" + content.slice(indexes[1]);
         const contentEncoded = Buffer.from(newContent).toString('base64');
 
-        core.info("Commit updates");
+        core.info("Push updates");
+        await utils.commitContributors(env, contributorsChartData.images);
+        await utils.commitReadme(env, { content: contentEncoded, sha: readme.data.sha });
 
-        /* await octokit.rest.repos.createOrUpdateFileContents({
-            owner: github.context.repo.owner,
-            repo: github.context.repo.repo,
-            path: "README.md",
-            sha: readme.data.sha,
-            message: "docs: create or update contributors chart",
-            content: contentEncoded,
-            branch: "actionsbot/update-contributors"
-        });
+        await octokit.rest.pulls.create({ owner: env.owner, repo: env.repo, head: env.defaultBranch, base: env.ref });
 
-        await octokit.rest.pulls.create({
-            owner: github.context.repo.owner,
-            repo: github.context.repo.repo,
-            head: "development",
-            base: "actionsbot/update-contributors"
-        }); */
-
+        core.info("Contributors chart created sucessfully! Please check the opened PR");
     } catch (error) {
         core.setFailed("Action failed: ", error);
     }
