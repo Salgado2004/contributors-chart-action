@@ -31635,10 +31635,10 @@ async function commitContributors(env, octokit, changes){
                 encoding: 'base64'
             });
         }
-        core.debug(`Tree data: ${JSON.stringify(tree)}`);
         const treeData = await octokit.rest.git.createTree({ owner: env.owner, repo: env.repo, base_tree: baseTree, tree: tree });
-        const commitData = await octokit.rest.git.createCommit({ owner: env.owner, repo: env.repo, message: "content: upload contributors avatars", tree: treeData.sha, parents: [baseTree] });
-        await octokit.rest.git.updateRef({ owner: env.owner, repo: env.repo, ref: `heads/${env.ref}`, sha: commitData.sha });
+        core.debug(`Tree data: ${JSON.stringify(treeData.data)}`);
+        const commitData = await octokit.rest.git.createCommit({ owner: env.owner, repo: env.repo, message: "content: upload contributors avatars", tree: treeData.data.sha, parents: [ref.object.sha] });
+        await octokit.rest.git.updateRef({ owner: env.owner, repo: env.repo, ref: `heads/${env.ref}`, sha: commitData.data.sha });
         core.debug(`Contributors avatars changes committed`);
     } catch(error){
         core.setFailed(`Commit contributors avatars changes failed: ${error.message}`, error);
