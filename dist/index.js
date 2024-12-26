@@ -31516,6 +31516,7 @@ async function setUpEnvironment(octokit) {
     core.debug(`owner: ${owner}, repo: ${repo}`);
     try {
         const data = await octokit.rest.repos.get({ owner, repo });
+        core.debug(`API response data: ${JSON.stringify(data)}`);
         const defaultBranch = data.default_branch;
         const ref = "actionsbot/update-contributors";
 
