@@ -31524,7 +31524,7 @@ async function setUpEnvironment(octokit) {
 
         try {
             await octokit.rest.repos.getBranch({ owner, repo, branch: ref });
-            await octokit.rest.repos.merge({ owner, repo, ref, defaultBranch });
+            await octokit.rest.repos.merge({ owner, repo, base: ref, head: defaultBranch });
         } catch (error) {
             if (error.status === 404) {
                 core.debug(`Branch ${ref} not found, creating new branch`);
@@ -31623,7 +31623,7 @@ async function createChart(contributorsList) {
 async function commitContributors(env, octokit, changes){
     try{
         core.debug(`Committing contributors avatars changes`);
-        const ref = await octokit.rest.git.getRef({ owner: env.owner, repo: env.repo, ref: `heads/${env.ref}`});
+        const { data: ref} = await octokit.rest.git.getRef({ owner: env.owner, repo: env.repo, ref: `heads/${env.ref}`});
         const baseTree = ref.object.sha;
         let tree = []
         for(image of changes){
