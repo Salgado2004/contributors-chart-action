@@ -31620,7 +31620,7 @@ async function createChart(contributorsList) {
     return { chart: contributorsChart, images: contributorsImages };
 }
 
-async function commitContributors(env, changes){
+async function commitContributors(env, octokit, changes){
     try{
         core.debug(`Committing contributors avatars changes`);
         const ref = await octokit.rest.git.getRef({ owner: env.owner, repo: env.repo, ref: `heads/${env.ref}`});
@@ -31644,7 +31644,7 @@ async function commitContributors(env, changes){
     }
 }
 
-async function commitReadme(env, changes){
+async function commitReadme(env, octokit, changes){
     try{
         core.debug(`Committing README changes`);
         await octokit.rest.repos.createOrUpdateFileContents({
@@ -33625,9 +33625,9 @@ async function run() {
 
         core.info("Push updates");
         core.debug("Committing contributors data");
-        await utils.commitContributors(env, contributorsChartData.images);
+        await utils.commitContributors(env, octokit, contributorsChartData.images);
         core.debug("Committing updated README");
-        await utils.commitReadme(env, { content: contentEncoded, sha: readme.data.sha });
+        await utils.commitReadme(env, octokit, { content: contentEncoded, sha: readme.data.sha });
 
         core.debug("Creating pull request");
         await octokit.rest.pulls.create({ owner: env.owner, repo: env.repo, head: env.defaultBranch, base: env.ref });
