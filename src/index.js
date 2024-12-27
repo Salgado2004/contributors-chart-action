@@ -45,14 +45,14 @@ async function run() {
         const diff = await utils.compareBranches(env);
         if (diff.status === 'identical') {
             core.info("No new contributors included! Finishing job");
-            await env.octokit.rest.git.deleteRef({ owner: env.owner, repo: env.repo, ref: `refs/heads/${env.ref}` });
+            await env.octokit.rest.git.deleteRef({ owner: env.owner, repo: env.repo, ref: `heads/${env.ref}` });
             return;
         }
 
         const changedFiles = diff.files.filter(file => file.status !== 'unchanged');
         if (changedFiles.length === 0) {
             core.info("No new contributors included! Finishing job");
-            await env.octokit.rest.git.deleteRef({ owner: env.owner, repo: env.repo, ref: `refs/heads/${env.ref}` });
+            await env.octokit.rest.git.deleteRef({ owner: env.owner, repo: env.repo, ref: `heads/${env.ref}` });
             return;
         }
 
