@@ -31594,7 +31594,8 @@ async function processImage(contributor, env) {
     
     core.debug(`Image processed for contributor: ${contributor[0]}`);
 
-    return { path: `contributors/${contributor[0]}.png`, sha: blob.data.sha};
+    const sanitizedPath = `contributors/${contributor[0].replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
+    return { path: sanitizedPath, sha: blob.data.sha };
 }
 
 async function createChart(contributorsList, env) {
