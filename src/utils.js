@@ -162,10 +162,22 @@ async function commitReadme(env, changes){
     }
 }
 
+async function compareBranches(env){
+    try{
+        core.debug(`Comparing branches`);
+        const { data: diff } = await env.octokit.rest.repos.compareCommitsWithBasehead({ owner: env.owner, repo: env.repo, basehead: `${env.defaultBranch}...${env.ref}` });
+        core.debug(`Branches compared`);
+        return diff;
+    } catch(error){
+        core.setFailed(`Compare branches failed: ${error.message}`, error);
+    }
+}
+
 module.exports = {
     findIndexes,
     createChart,
     setUpEnvironment,
     commitContributors,
-    commitReadme
+    commitReadme,
+    compareBranches
 }
