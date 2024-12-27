@@ -17,12 +17,20 @@ async function run() {
 
         core.info("Gather contributors list");
         core.debug(`Listing contributors for owner: ${env.owner}, repo: ${env.repo}`);
-        const contributors = await env.octokit.rest.repos.listContributors({ owner: env.owner, repo: env.repo });
+
+        const contributions = core.getInput('contributions');
+        let contributors;
+        if (contributions === 'org') {
+            contributors = await env.octokit.rest.orgs.listMembers({ org: env.owner });
+        } else{
+            contributors = await env.octokit.rest.repos.listContributors({ owner: env.owner, repo: env.repo });
+        }
+        
         const contributorsList = contributors.data.map(contributor => [contributor.login, contributor.avatar_url, contributor.html_url]);
         core.info("Creating chart...");
         core.debug("Creating chart with contributors list");
         const contributorsChartData = await utils.createChart(contributorsList, env);
-        
+
         core.info("Update README content");
         core.debug("Finding indexes in README content");
         const indexes = utils.findIndexes(content);

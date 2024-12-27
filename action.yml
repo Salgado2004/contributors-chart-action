@@ -5,6 +5,10 @@ inputs:
   token:
     description: 'Repository secret token'
     required: true
+  contributions:
+    description: 'Contributions scope'
+    required: false
+    default: 'repo'
 runs:
   using: 'node20'
   main: 'dist/index.js'
