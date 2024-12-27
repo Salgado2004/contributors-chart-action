@@ -35,6 +35,13 @@ async function run() {
         core.debug("Committing updated README");
         await utils.commitReadme(env, { content: contentEncoded, sha: readme.data.sha });
 
+        const diff = await utils.compareBranches(env);
+        if (diff.status === 'identical') {
+            core.info("No new contributors included! Finishing job");
+            await env.octokit.rest.git.deleteRef({ owner: env.owner, repo: env.repo, ref: `refs/heads/${env.ref}` });
+            return;
+        }
+
         core.info(`Contributors chart created successfully! Check the branch ${env.ref} for the updates and merge the changes to the main branch. ;D`);
     } catch (error) {
         core.setFailed(`Action failed: ${error.message}`, error);

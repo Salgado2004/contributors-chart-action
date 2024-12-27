@@ -31670,12 +31670,24 @@ async function commitReadme(env, changes){
     }
 }
 
+async function compareBranches(env){
+    try{
+        core.debug(`Comparing branches`);
+        const { data: diff } = await env.octokit.rest.repos.compareCommitsWithBasehead({ owner: env.owner, repo: env.repo, basehead: `${env.defaultBranch}...${env.ref}` });
+        core.debug(`Branches compared`);
+        return diff;
+    } catch(error){
+        core.setFailed(`Compare branches failed: ${error.message}`, error);
+    }
+}
+
 module.exports = {
     findIndexes,
     createChart,
     setUpEnvironment,
     commitContributors,
-    commitReadme
+    commitReadme,
+    compareBranches
 }
 
 /***/ }),
@@ -33635,6 +33647,13 @@ async function run() {
         await utils.commitContributors(env, contributorsChartData.images);
         core.debug("Committing updated README");
         await utils.commitReadme(env, { content: contentEncoded, sha: readme.data.sha });
+
+        const diff = await utils.compareBranches(env);
+        if (diff.status === 'identical') {
+            core.info("No new contributors included! Finishing job");
+            await env.octokit.rest.git.deleteRef({ owner: env.owner, repo: env.repo, ref: `refs/heads/${env.ref}` });
+            return;
+        }
 
         core.info(`Contributors chart created successfully! Check the branch ${env.ref} for the updates and merge the changes to the main branch. ;D`);
     } catch (error) {
