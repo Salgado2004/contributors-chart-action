@@ -2,7 +2,8 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 const { createCanvas, loadImage } = require("canvas");
 
-async function setUpEnvironment(octokit) {
+async function setUpEnvironment(token) {
+    const octokit = github.getOctokit(token);
     const owner = github.context.repo.owner;
     const repo = github.context.repo.repo;
     core.debug(`owner: ${owner}, repo: ${repo}`);
@@ -31,7 +32,7 @@ async function setUpEnvironment(octokit) {
                 core.setFailed(`Setting up environment failed: ${error.message}`, error);
             }
         }
-        return { owner: owner, repo: repo, defaultBranch: defaultBranch, ref: ref };
+        return { owner: owner, repo: repo, defaultBranch: defaultBranch, ref: ref, octokit: octokit };
     } catch (error) {
         core.setFailed(`Setting up environment failed: ${error.message}`, error);
     }
@@ -58,7 +59,7 @@ function findIndexes(data) {
     return [startIndex, endIndex];
 }
 
-async function processImage(contributor) {
+async function processImage(contributor, env) {
     const path = contributor[1];
     core.debug(`Processing image for contributor: ${contributor[0]}, path: ${path}`);
     const canvas = createCanvas(80, 80);
@@ -76,20 +77,26 @@ async function processImage(contributor) {
 
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
     const base64Image = canvas.toDataURL('image/png');
-
+    const blob = await env.octokit.rest.git.createBlob({ 
+        owner: env.owner, 
+        repo: env.repo, 
+        content: base64Image.replace("data:image/png;base64,",""),
+        encoding: 'base64'
+    });
+    
     core.debug(`Image processed for contributor: ${contributor[0]}`);
 
-    return { path: `contributors/${contributor[0]}.png`, contentBase64: base64Image.replace("data:image/png;base64,","")};
+    return { path: `contributors/${contributor[0]}.png`, sha: blob.data.sha};
 }
 
-async function createChart(contributorsList) {
+async function createChart(contributorsList, env) {
     core.debug(`Creating chart for contributors list`);
     let contributorsChart = "<table>\n\t<tr>\n";
     let contributorsImages = [];
     let counter = 0;
 
     for (let contributor of contributorsList) {
-        const imageData = await processImage(contributor);
+        const imageData = await processImage(contributor, env);
         contributorsChart +=
 `       <td align="center">
             <a href="${contributor[2]}">
@@ -112,10 +119,10 @@ async function createChart(contributorsList) {
     return { chart: contributorsChart, images: contributorsImages };
 }
 
-async function commitContributors(env, octokit, changes){
+async function commitContributors(env, changes){
     try{
         core.debug(`Committing contributors avatars changes`);
-        const { data: ref} = await octokit.rest.git.getRef({ owner: env.owner, repo: env.repo, ref: `heads/${env.ref}`});
+        const { data: ref} = await env.octokit.rest.git.getRef({ owner: env.owner, repo: env.repo, ref: `heads/${env.ref}`});
         const baseTree = ref.object.sha;
         let tree = []
         for(image of changes){
@@ -123,24 +130,23 @@ async function commitContributors(env, octokit, changes){
                 path: image.path,
                 mode: '100644',
                 type: 'blob',
-                content: image.contentBase64,
-                encoding: 'base64'
+                sha: image.sha
             });
         }
-        const treeData = await octokit.rest.git.createTree({ owner: env.owner, repo: env.repo, base_tree: baseTree, tree: tree });
+        const treeData = await env.octokit.rest.git.createTree({ owner: env.owner, repo: env.repo, base_tree: baseTree, tree: tree });
         core.debug(`Tree data: ${JSON.stringify(treeData.data)}`);
-        const commitData = await octokit.rest.git.createCommit({ owner: env.owner, repo: env.repo, message: "content: upload contributors avatars", tree: treeData.data.sha, parents: [ref.object.sha] });
-        await octokit.rest.git.updateRef({ owner: env.owner, repo: env.repo, ref: `heads/${env.ref}`, sha: commitData.data.sha });
+        const commitData = await env.octokit.rest.git.createCommit({ owner: env.owner, repo: env.repo, message: "content: upload contributors avatars", tree: treeData.data.sha, parents: [ref.object.sha] });
+        await env.octokit.rest.git.updateRef({ owner: env.owner, repo: env.repo, ref: `heads/${env.ref}`, sha: commitData.data.sha });
         core.debug(`Contributors avatars changes committed`);
     } catch(error){
         core.setFailed(`Commit contributors avatars changes failed: ${error.message}`, error);
     }
 }
 
-async function commitReadme(env, octokit, changes){
+async function commitReadme(env, changes){
     try{
         core.debug(`Committing README changes`);
-        await octokit.rest.repos.createOrUpdateFileContents({
+        await env.octokit.rest.repos.createOrUpdateFileContents({
             owner: env.owner,
             repo: env.repo,
             path: "README.md",

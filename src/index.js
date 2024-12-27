@@ -7,22 +7,21 @@ async function run() {
         core.info("Setting up environment");
         core.debug("Fetching token");
         const token = core.getInput('token');
-        const octokit = github.getOctokit(token);
-        core.debug("Setting up environment with octokit");
-        const env = await utils.setUpEnvironment(octokit);
+        core.debug("Setting up environment with token");
+        const env = await utils.setUpEnvironment(token);
 
         core.info("Request README data");
         core.debug(`Fetching README for owner: ${env.owner}, repo: ${env.repo}`);
-        const readme = await octokit.rest.repos.getReadme({ owner: env.owner, repo: env.repo });
+        const readme = await env.octokit.rest.repos.getReadme({ owner: env.owner, repo: env.repo, ref: env.ref });
         const content = Buffer.from(readme.data.content, 'base64').toString();
 
         core.info("Gather contributors list");
         core.debug(`Listing contributors for owner: ${env.owner}, repo: ${env.repo}`);
-        const contributors = await octokit.rest.repos.listContributors({ owner: env.owner, repo: env.repo });
+        const contributors = await env.octokit.rest.repos.listContributors({ owner: env.owner, repo: env.repo });
         const contributorsList = contributors.data.map(contributor => [contributor.login, contributor.avatar_url, contributor.html_url]);
         core.info("Creating chart...");
         core.debug("Creating chart with contributors list");
-        const contributorsChartData = await utils.createChart(contributorsList);
+        const contributorsChartData = await utils.createChart(contributorsList, env);
         
         core.info("Update README content");
         core.debug("Finding indexes in README content");
@@ -32,12 +31,12 @@ async function run() {
 
         core.info("Push updates");
         core.debug("Committing contributors data");
-        await utils.commitContributors(env, octokit, contributorsChartData.images);
+        await utils.commitContributors(env, contributorsChartData.images);
         core.debug("Committing updated README");
-        await utils.commitReadme(env, octokit, { content: contentEncoded, sha: readme.data.sha });
+        await utils.commitReadme(env, { content: contentEncoded, sha: readme.data.sha });
 
         core.debug("Creating pull request");
-        await octokit.rest.pulls.create({ owner: env.owner, repo: env.repo, head: env.defaultBranch, base: env.ref });
+        await env.octokit.rest.pulls.create({ owner: env.owner, repo: env.repo, head: env.defaultBranch, base: env.ref });
 
         core.info("Contributors chart created successfully! Please check the opened PR");
     } catch (error) {
