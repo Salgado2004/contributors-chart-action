@@ -33612,7 +33612,6 @@ module.exports = /*#__PURE__*/JSON.parse('{"name":"canvas","description":"Canvas
 /************************************************************************/
 var __webpack_exports__ = {};
 const utils = __nccwpck_require__(2559);
-const github = __nccwpck_require__(2083);
 const core = __nccwpck_require__(3063);
 
 async function run() {
@@ -33658,6 +33657,13 @@ async function run() {
 
         const diff = await utils.compareBranches(env);
         if (diff.status === 'identical') {
+            core.info("No new contributors included! Finishing job");
+            await env.octokit.rest.git.deleteRef({ owner: env.owner, repo: env.repo, ref: `refs/heads/${env.ref}` });
+            return;
+        }
+
+        const changedFiles = diff.files.filter(file => file.status !== 'unchanged');
+        if (changedFiles.length === 0) {
             core.info("No new contributors included! Finishing job");
             await env.octokit.rest.git.deleteRef({ owner: env.owner, repo: env.repo, ref: `refs/heads/${env.ref}` });
             return;
