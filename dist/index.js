@@ -33612,7 +33612,6 @@ module.exports = /*#__PURE__*/JSON.parse('{"name":"canvas","description":"Canvas
 /************************************************************************/
 var __webpack_exports__ = {};
 const utils = __nccwpck_require__(2559);
-const github = __nccwpck_require__(2083);
 const core = __nccwpck_require__(3063);
 
 async function run() {
