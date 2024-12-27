@@ -50,6 +50,13 @@ async function run() {
             return;
         }
 
+        const changedFiles = diff.files.filter(file => file.status !== 'unchanged');
+        if (changedFiles.length === 0) {
+            core.info("No new contributors included! Finishing job");
+            await env.octokit.rest.git.deleteRef({ owner: env.owner, repo: env.repo, ref: `refs/heads/${env.ref}` });
+            return;
+        }
+
         core.info(`Contributors chart created successfully! Check the branch ${env.ref} for the updates and merge the changes to the main branch. ;D`);
     } catch (error) {
         core.setFailed(`Action failed: ${error.message}`, error);
