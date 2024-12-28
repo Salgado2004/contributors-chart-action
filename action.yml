@@ -9,6 +9,10 @@ inputs:
     description: 'Contributions scope'
     required: false
     default: 'repo'
+  include-bots:
+    description: 'Boolean flag to include bot contributors'
+    required: false
+    default: true
 runs:
   using: 'node20'
   main: 'dist/index.js'
