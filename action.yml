@@ -1,6 +1,9 @@
-name: 'Repository Contributors Chart Generator'
+name: 'Contributors README Chart Generator'
 description: 'Generate a HTML chart of the contributors and place it in the README'
 author: 'Salgado2004'
+branding:
+  icon: 'users'
+  color: 'blue'
 inputs:
   token:
     description: 'Repository secret token'
@@ -9,6 +12,10 @@ inputs:
     description: 'Contributions scope'
     required: false
     default: 'repo'
+  include-bots:
+    description: 'Boolean flag to include bot contributors'
+    required: false
+    default: true
 runs:
   using: 'node20'
   main: 'dist/index.js'

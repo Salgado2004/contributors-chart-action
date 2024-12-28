@@ -18,13 +18,19 @@ async function run() {
         core.debug(`Listing contributors for owner: ${env.owner}, repo: ${env.repo}`);
 
         const contributions = core.getInput('contributions');
+        const includeBots = core.getInput('include-bots') === undefined ? true : core.getInput('include-bots');
         let contributors;
+        
         if (contributions === 'org') {
             contributors = await env.octokit.rest.orgs.listMembers({ org: env.owner });
         } else{
             contributors = await env.octokit.rest.repos.listContributors({ owner: env.owner, repo: env.repo });
         }
-        
+
+        if(!includeBots){
+            contributors.data.filter(contributor => contributor.type === "User");
+        }
+
         const contributorsList = contributors.data.map(contributor => [contributor.login, contributor.avatar_url, contributor.html_url]);
         core.info("Creating chart...");
         core.debug("Creating chart with contributors list");

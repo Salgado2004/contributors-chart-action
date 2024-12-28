@@ -114,6 +114,7 @@ async function createChart(contributorsList, env) {
         contributorsImages.push(imageData);
     };
     contributorsChart += "\t</tr>\n</table>";
+    contributorsChart += "\n<sub>Made with <a href='https://github.com/marketplace/actions/'>Contributors README Chart Generator</a></sub>";
 
     core.debug(`Chart created for contributors list`);
 
