@@ -1,6 +1,9 @@
-name: 'Repository Contributors Chart Generator'
+name: 'Contributors README Chart Generator'
 description: 'Generate a HTML chart of the contributors and place it in the README'
 author: 'Salgado2004'
+branding:
+  icon: 'users'
+  color: 'blue'
 inputs:
   token:
     description: 'Repository secret token'
