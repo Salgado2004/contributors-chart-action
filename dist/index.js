@@ -31600,11 +31600,13 @@ async function processImage(contributor, env) {
 
 async function createChart(contributorsList, env) {
     core.debug(`Creating chart for contributors list`);
+    let limit = core.getInput('limit');
+    if (limit === undefined) limit = 24;
     let contributorsChart = "<table>\n\t<tr>\n";
-    let contributorsImages = [];
+    const contributorsImages = [];
     let counter = 0;
 
-    for (let contributor of contributorsList) {
+    for (const contributor of contributorsList) {
         const imageData = await processImage(contributor, env);
         contributorsChart +=
 `       <td align="center">
@@ -31613,14 +31615,21 @@ async function createChart(contributorsList, env) {
                 <p><strong>${contributor[0]}</strong></p>
             </a>
         </td>
-`
-        counter++;
-        if (counter == 6) {
-            contributorsChart += "\t</tr>\n\t<tr>\n"
-            counter = 0;
-        }
+`;
         contributorsImages.push(imageData);
-    };
+        counter++;
+        if ((counter % 6) === 0) {
+            contributorsChart += "\t</tr>\n\t<tr>\n";
+        }
+        if (counter === limit) {
+            contributorsChart +=
+`       <td align="center">
+            <a href="https://github.com/${env.owner}/${env.repo}/graphs/contributors">See more <br>${contributorsList.length - limit} contributors</a>
+        </td>
+`;
+            break;
+        }
+    }
     contributorsChart += "\t</tr>\n</table>";
     contributorsChart += "\n<sub>Made with <a href='https://github.com/marketplace/actions/contributors-readme-chart-generator'>Contributors README Chart Generator</a></sub>";
 
