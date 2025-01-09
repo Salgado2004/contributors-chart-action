@@ -33617,32 +33617,37 @@ const core = __nccwpck_require__(3063);
 
 async function run() {
     try {
-        core.info("Setting up environment");
-        core.debug("Fetching token");
         const token = core.getInput('token');
+        const path = core.getInput('path');
+        const contributions = core.getInput('contributions');
+        const includeBots = core.getInput('include-bots') !== 'false';
+
+        core.info("Setting up environment");
         core.debug("Setting up environment with token");
         const env = await utils.setUpEnvironment(token);
 
         core.info("Request README data");
         core.debug(`Fetching README for owner: ${env.owner}, repo: ${env.repo}`);
-        const readme = await env.octokit.rest.repos.getReadme({ owner: env.owner, repo: env.repo, ref: env.ref });
+        let readme;
+        if (path) {
+            readme = await env.octokit.rest.repos.getReadmeInDirectory({ owner: env.owner, repo: env.repo, dir: path, ref: env.ref });
+        } else {
+            readme = await env.octokit.rest.repos.getReadme({ owner: env.owner, repo: env.repo, ref: env.ref });
+        }
         const content = Buffer.from(readme.data.content, 'base64').toString();
 
         core.info("Gather contributors list");
         core.debug(`Listing contributors for owner: ${env.owner}, repo: ${env.repo}`);
 
-        const contributions = core.getInput('contributions');
-        const includeBots = core.getInput('include-bots') === undefined ? true : core.getInput('include-bots');
         let contributors;
-        
         if (contributions === 'org') {
             contributors = await env.octokit.rest.orgs.listMembers({ org: env.owner });
-        } else{
+        } else {
             contributors = await env.octokit.rest.repos.listContributors({ owner: env.owner, repo: env.repo });
         }
 
-        if(!includeBots){
-            contributors.data.filter(contributor => contributor.type === "User");
+        if (!includeBots) {
+            contributors.data = contributors.data.filter(contributor => contributor.type === "User");
         }
 
         const contributorsList = contributors.data.map(contributor => [contributor.login, contributor.avatar_url, contributor.html_url]);

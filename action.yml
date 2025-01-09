@@ -16,6 +16,9 @@ inputs:
     description: 'Boolean flag to include bot contributors'
     required: false
     default: true
+  path:
+    description: 'The alternate path to look for a README file'
+    required: false
 runs:
   using: 'node20'
   main: 'dist/index.js'
