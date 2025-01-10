@@ -31662,21 +31662,25 @@ async function commitContributors(env, changes){
     }
 }
 
-async function commitReadme(env, changes){
-    try{
+async function commitReadme(env, changes) {
+    try {
         core.debug(`Committing README changes`);
+        let readme = "README.md";
+        if (changes.path !== undefined) readme = `${changes.path}/README.md`;
+        
         await env.octokit.rest.repos.createOrUpdateFileContents({
             owner: env.owner,
             repo: env.repo,
-            path: "README.md",
+            path: readme,
             sha: changes.sha,
             message: "docs: create or update contributors chart",
             content: changes.content,
             branch: env.ref
         });
+        
         core.debug(`README changes committed`);
-    } catch(error){
-        core.setFailed(`Commit readme changes failed: ${error.message}`, error);
+    } catch (error) {
+        core.setFailed(`Commit readme changes failed: ${error.message}`);
     }
 }
 
@@ -33674,7 +33678,7 @@ async function run() {
         core.debug("Committing contributors data");
         await utils.commitContributors(env, contributorsChartData.images);
         core.debug("Committing updated README");
-        await utils.commitReadme(env, { content: contentEncoded, sha: readme.data.sha });
+        await utils.commitReadme(env, { content: contentEncoded, sha: readme.data.sha, path: path });
 
         const diff = await utils.compareBranches(env);
         if (diff.status === 'identical') {
