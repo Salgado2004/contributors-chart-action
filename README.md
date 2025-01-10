@@ -56,6 +56,18 @@ jobs:
 
   _Default_: true
 
+- `path` [string]
+
+  Allows you to specify an alternate path to look for a README file.
+
+  _Default_: ""
+
+- `limit` [number]
+
+  Allows you to set the maximum number of contributors you want to display in the chart.
+
+  _Default_: 24
+
 ### License
 The scripts and documentation in this project are released under the [MIT License](LICENSE)
 
