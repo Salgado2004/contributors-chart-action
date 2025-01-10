@@ -16,6 +16,13 @@ inputs:
     description: 'Boolean flag to include bot contributors'
     required: false
     default: true
+  path:
+    description: 'The alternate path to look for a README file'
+    required: false
+  limit:
+    description: 'Max number of contributors you want to display in the chart'
+    required: false
+    default: 24
 runs:
   using: 'node20'
   main: 'dist/index.js'
