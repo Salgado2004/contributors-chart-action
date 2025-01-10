@@ -51,7 +51,7 @@ async function run() {
         core.debug("Committing contributors data");
         await utils.commitContributors(env, contributorsChartData.images);
         core.debug("Committing updated README");
-        await utils.commitReadme(env, { content: contentEncoded, sha: readme.data.sha });
+        await utils.commitReadme(env, { content: contentEncoded, sha: readme.data.sha, path: path });
 
         const diff = await utils.compareBranches(env);
         if (diff.status === 'identical') {
