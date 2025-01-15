@@ -3,20 +3,19 @@ const core = require('@actions/core');
 
 async function run() {
     try {
-        const token = core.getInput('token');
-        const path = core.getInput('path');
+        core.info(`Starting action: version ${process.env.npm_package_version}`);
+        
         const contributions = core.getInput('contributions');
         const includeBots = core.getInput('include-bots') !== 'false';
 
         core.info("Setting up environment");
-        core.debug("Setting up environment with token");
-        const env = await utils.setUpEnvironment(token);
+        const env = await utils.setUpEnvironment();
 
         core.info("Request README data");
         core.debug(`Fetching README for owner: ${env.owner}, repo: ${env.repo}`);
         let readme;
-        if (path) {
-            readme = await env.octokit.rest.repos.getReadmeInDirectory({ owner: env.owner, repo: env.repo, dir: path, ref: env.ref });
+        if (env.path) {
+            readme = await env.octokit.rest.repos.getReadmeInDirectory({ owner: env.owner, repo: env.repo, dir: env.path, ref: env.ref });
         } else {
             readme = await env.octokit.rest.repos.getReadme({ owner: env.owner, repo: env.repo, ref: env.ref });
         }
@@ -51,7 +50,7 @@ async function run() {
         core.debug("Committing contributors data");
         await utils.commitContributors(env, contributorsChartData.images);
         core.debug("Committing updated README");
-        await utils.commitReadme(env, { content: contentEncoded, sha: readme.data.sha, path: path });
+        await utils.commitReadme(env, { content: contentEncoded, sha: readme.data.sha, path: env.path });
 
         const diff = await utils.compareBranches(env);
         if (diff.status === 'identical') {
