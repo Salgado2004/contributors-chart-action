@@ -1,9 +1,15 @@
+const fs = require('fs');
+const path = require('path');
 const utils = require('./utils');
 const core = require('@actions/core');
 
 async function run() {
     try {
-        core.info(`Starting action: version ${process.env.npm_package_version}`);
+        const packageJsonPath = path.join(__dirname, '..', 'package.json');
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+        const version = packageJson.version;
+
+        core.info(`Starting action: version ${version}`);
         
         const contributions = core.getInput('contributions');
         const includeBots = core.getInput('include-bots') !== 'false';

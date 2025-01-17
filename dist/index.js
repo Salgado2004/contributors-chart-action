@@ -33631,12 +33631,18 @@ module.exports = /*#__PURE__*/JSON.parse('{"name":"canvas","description":"Canvas
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
+const fs = __nccwpck_require__(9896);
+const path = __nccwpck_require__(6928);
 const utils = __nccwpck_require__(2559);
 const core = __nccwpck_require__(3063);
 
 async function run() {
     try {
-        core.info(`Starting action: version ${process.env.npm_package_version}`);
+        const packageJsonPath = __nccwpck_require__.ab + "package.json";
+        const packageJson = JSON.parse(fs.readFileSync(__nccwpck_require__.ab + "package.json", 'utf8'));
+        const version = packageJson.version;
+
+        core.info(`Starting action: version ${version}`);
         
         const contributions = core.getInput('contributions');
         const includeBots = core.getInput('include-bots') !== 'false';
