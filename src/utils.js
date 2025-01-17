@@ -103,10 +103,10 @@ async function createChart(contributorsList, env) {
     limit = parseInt(limit);
     let contributorsChart = "<table>\n\t<tr>\n";
     const contributorsImages = [];
-    let counter = 1;
+    let counter = 0;
 
     core.debug(`Limit: ${limit}`);
-    for (const contributor of contributorsList) {
+    loop: for (const contributor of contributorsList) {
         const imageData = await processImage(contributor, env);
         contributorsChart +=
             `       <td align="center">
@@ -121,13 +121,13 @@ async function createChart(contributorsList, env) {
         if ((counter % 6) === 0) {
             contributorsChart += "\t</tr>\n\t<tr>\n";
         }
-        if (counter == limit) {
+        if (counter === limit) {
             contributorsChart +=
                 `       <td align="center">
             <a href="https://github.com/${env.owner}/${env.repo}/graphs/contributors">See more <br>${contributorsList.length - limit} contributors</a>
         </td>
 `;
-            break;
+            break loop;
         }
     }
     contributorsChart += "\t</tr>\n</table>";
