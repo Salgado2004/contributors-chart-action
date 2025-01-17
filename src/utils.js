@@ -105,6 +105,7 @@ async function createChart(contributorsList, env) {
     const contributorsImages = [];
     let counter = 1;
 
+    core.debug(`Limit: ${limit}`);
     for (const contributor of contributorsList) {
         const imageData = await processImage(contributor, env);
         contributorsChart +=
