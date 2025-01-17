@@ -31599,7 +31599,7 @@ async function processImage(contributor, env) {
 
     const sanitizedPath = `contributors/${contributor[0].replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`;
 
-    const pathDepth = env.path.split('/').length;
+    const pathDepth = env.path !== "" ? env.path.split('/').length : 0;
     const relativePath = pathDepth > 0 ? "../".repeat(pathDepth) : "./";
     return { path: sanitizedPath, relativePath: relativePath+sanitizedPath, sha: blob.data.sha };
 }
