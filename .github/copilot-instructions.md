@@ -1,0 +1,1 @@
+Suggest commit messages always in English, using conventional commits "feat, wip, fix"
