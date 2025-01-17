@@ -93,7 +93,7 @@ async function processImage(contributor, env) {
 
     const pathDepth = env.path.split('/').length;
     const relativePath = pathDepth > 0 ? "../".repeat(pathDepth) : "./";
-    return { path: relativePath+sanitizedPath, sha: blob.data.sha };
+    return { path: sanitizedPath, relativePath: relativePath+sanitizedPath, sha: blob.data.sha };
 }
 
 async function createChart(contributorsList, env) {
@@ -109,7 +109,7 @@ async function createChart(contributorsList, env) {
         contributorsChart +=
             `       <td align="center">
             <a href="${contributor[2]}">
-                <img src="${imageData.path}" width="100px;" alt="${contributor[0]}" />
+                <img src="${imageData.relativePath}" width="100px;" alt="${contributor[0]}" />
                 <p><strong>${contributor[0]}</strong></p>
             </a>
         </td>
