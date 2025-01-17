@@ -164,7 +164,7 @@ async function commitReadme(env, changes) {
     try {
         core.debug(`Committing README changes`);
         let readme = "README.md";
-        if (changes.path !== undefined) readme = `${changes.path}/README.md`;
+        if (changes.path !== undefined && changes.path !== "") readme = `${changes.path}/README.md`;
 
         await env.octokit.rest.repos.createOrUpdateFileContents({
             owner: env.owner,
