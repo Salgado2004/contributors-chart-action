@@ -31520,7 +31520,6 @@ async function setUpEnvironment() {
     core.debug(`owner: ${owner}, repo: ${repo}`);
     try {
         const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
-        core.debug(`API response data: ${JSON.stringify(repoData)}`);
         const defaultBranch = repoData.default_branch;
         const ref = "actionsbot/update-contributors";
 
@@ -31608,6 +31607,7 @@ async function createChart(contributorsList, env) {
     core.debug(`Creating chart for contributors list`);
     let limit = core.getInput('limit');
     if (limit === undefined) limit = 24;
+    limit = parseInt(limit);
     let contributorsChart = "<table>\n\t<tr>\n";
     const contributorsImages = [];
     let counter = 1;
