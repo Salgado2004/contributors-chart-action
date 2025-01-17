@@ -60,6 +60,9 @@ jobs:
 
   Allows you to specify an alternate path to look for a README file.
 
+  _Example_: "profile" 
+  > Will search the README under the folder "profile/"
+
   _Default_: ""
 
 - `limit` [number]
