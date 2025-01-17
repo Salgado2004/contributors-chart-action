@@ -121,7 +121,7 @@ async function createChart(contributorsList, env) {
         if ((counter % 6) === 0) {
             contributorsChart += "\t</tr>\n\t<tr>\n";
         }
-        if (counter === limit) {
+        if (counter == limit) {
             contributorsChart +=
                 `       <td align="center">
             <a href="https://github.com/${env.owner}/${env.repo}/graphs/contributors">See more <br>${contributorsList.length - limit} contributors</a>
