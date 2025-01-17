@@ -31610,7 +31610,7 @@ async function createChart(contributorsList, env) {
     if (limit === undefined) limit = 24;
     let contributorsChart = "<table>\n\t<tr>\n";
     const contributorsImages = [];
-    let counter = 0;
+    let counter = 1;
 
     for (const contributor of contributorsList) {
         const imageData = await processImage(contributor, env);
